@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    >
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:background="@android:color/white"
+        android:weightSum="5"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:padding="8dp">
+        <TextView
+            android:textStyle="bold"
+            android:fontFamily="@font/brandon_medium"
+            android:text="@string/popular_categories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"/>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_popular"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3">
+            <TextView
+                android:layout_marginTop="10dp"
+                android:layout_marginLeft="8dp"
+                android:fontFamily="@font/brandon_medium"
+                android:text="@string/best_deals"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:textSize="24sp"/>
+            <com.asksira.loopingviewpager.LoopingViewPager
+                android:id="@+id/viewpager"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:isInfinite="true"
+                app:autoScroll="true"
+                app:scrollInterval="5000"
+                app:viewpagerAspectRatio="1.33"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>
