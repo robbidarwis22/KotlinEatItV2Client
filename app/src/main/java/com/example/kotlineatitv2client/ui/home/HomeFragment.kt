@@ -19,8 +19,10 @@ import butterknife.Unbinder
 import com.asksira.loopingviewpager.LoopingViewPager
 import com.example.kotlineatitv2client.Adapter.MyBestDealsAdapter
 import com.example.kotlineatitv2client.Adapter.MyPopularCategoriesAdapter
+import com.example.kotlineatitv2client.EventBus.MenuItemBack
 import com.example.kotlineatitv2client.R
 import kotlinx.android.synthetic.main.fragment_home.*
+import org.greenrobot.eventbus.EventBus
 
 class HomeFragment : Fragment() {
 
@@ -72,5 +74,10 @@ class HomeFragment : Fragment() {
     override fun onPause() {
         viewPager!!.pauseAutoScroll()
         super.onPause()
+    }
+
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
     }
 }

@@ -15,8 +15,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.kotlineatitv2client.Adapter.MyFoodListAdapter
 import com.example.kotlineatitv2client.Common.Common
+import com.example.kotlineatitv2client.EventBus.MenuItemBack
 import com.example.kotlineatitv2client.R
 import kotlinx.android.synthetic.main.fragment_home.*
+import org.greenrobot.eventbus.EventBus
 
 class FoodListFragment : Fragment() {
 
@@ -26,6 +28,12 @@ class FoodListFragment : Fragment() {
     var layoutAnimationController:LayoutAnimationController?=null
 
     var adapter : MyFoodListAdapter?=null
+
+    override fun onStop() {
+        if(adapter != null)
+            adapter!!.onStop()
+        super.onStop()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -52,5 +60,10 @@ class FoodListFragment : Fragment() {
         layoutAnimationController = AnimationUtils.loadLayoutAnimation(context, R.anim.layout_item_from_left)
 
         (activity as AppCompatActivity).supportActionBar!!.title = Common.categorySelected!!.name
+    }
+
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
     }
 }

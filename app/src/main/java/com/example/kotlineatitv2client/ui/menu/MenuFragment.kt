@@ -18,10 +18,12 @@ import com.example.kotlineatitv2client.Adapter.MyBestDealsAdapter
 import com.example.kotlineatitv2client.Adapter.MyCategoriesAdapter
 import com.example.kotlineatitv2client.Common.Common
 import com.example.kotlineatitv2client.Common.SpacesItemDecoration
+import com.example.kotlineatitv2client.EventBus.MenuItemBack
 import com.example.kotlineatitv2client.R
 import dmax.dialog.SpotsDialog
 import kotlinx.android.synthetic.main.fragment_category.*
 import kotlinx.android.synthetic.main.nav_header_home.*
+import org.greenrobot.eventbus.EventBus
 
 class MenuFragment : Fragment() {
 
@@ -80,5 +82,10 @@ class MenuFragment : Fragment() {
         }
         recycler_menu!!.layoutManager = layoutManager
         recycler_menu!!.addItemDecoration(SpacesItemDecoration(8))
+    }
+
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
     }
 }
