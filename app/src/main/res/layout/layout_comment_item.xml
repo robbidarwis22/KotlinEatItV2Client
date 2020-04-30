@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:weightSum="10"
+    android:padding="8dp"
+    android:background="@android:color/white"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:src="@drawable/ic_account_circle_black_24dp"
+        android:layout_width="0dp"
+        android:layout_weight="2"
+        android:layout_gravity="center_horizontal|center_vertical"
+        android:layout_height="100dp"/>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_weight="8"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/txt_comment_name"
+            android:text="Name"
+            android:textSize="24sp"
+            android:fontFamily="@font/brandon_medium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/txt_comment_date"
+            android:text="Name"
+            android:textSize="16sp"
+            android:fontFamily="@font/brandon_medium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <RatingBar
+            android:id="@+id/rating_bar"
+            android:numStars="5"
+            style="?attr/ratingBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/txt_comment"
+            android:text="Comment"
+            android:textSize="22sp"
+            android:textStyle="italic"
+            android:fontFamily="@font/brandon_medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+</LinearLayout>

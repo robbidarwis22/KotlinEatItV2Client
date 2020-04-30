@@ -18,26 +18,26 @@
         tools:layout="@layout/fragment_category" />
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.example.kotlineatitv2client.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:id="@+id/nav_food_detail"
+        android:name="com.example.kotlineatitv2client.ui.fooddetail.FoodDetailFragment"
+        android:label="@string/menu_food_detail"
+        tools:layout="@layout/fragment_food_detail" />
 
     <fragment
-        android:id="@+id/nav_tools"
-        android:name="com.example.kotlineatitv2client.ui.tools.ToolsFragment"
-        android:label="@string/menu_tools"
-        tools:layout="@layout/fragment_tools" />
-
-    <fragment
-        android:id="@+id/nav_share"
-        android:name="com.example.kotlineatitv2client.ui.share.ShareFragment"
-        android:label="@string/menu_share"
-        tools:layout="@layout/fragment_share" />
+        android:id="@+id/nav_cart"
+        android:name="com.example.kotlineatitv2client.ui.cart.CartFragment"
+        android:label="@string/menu_cart"
+        tools:layout="@layout/fragment_cart" />
 
     <fragment
         android:id="@+id/nav_food_list"
         android:name="com.example.kotlineatitv2client.ui.foodlist.FoodListFragment"
         android:label="@string/menu_food_list"
         tools:layout="@layout/fragment_food_list" />
+
+    <fragment
+        android:id="@+id/nav_view_order"
+        android:name="com.example.kotlineatitv2client.ui.view_orders.ViewOrderFragment"
+        android:label="@string/menu_view_orders"
+        tools:layout="@layout/fragment_view_orders" />
 </navigation>
