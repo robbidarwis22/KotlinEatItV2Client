@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,7 +16,7 @@ import com.example.kotlineatitv2client.Adapter.MyOrderAdapter
 import com.example.kotlineatitv2client.Callback.ILoadOrderCallbackListener
 import com.example.kotlineatitv2client.Common.Common
 import com.example.kotlineatitv2client.EventBus.MenuItemBack
-import com.example.kotlineatitv2client.Model.Order
+import com.example.kotlineatitv2client.Model.OrderModel
 import com.example.kotlineatitv2client.R
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -57,7 +56,7 @@ class ViewOrderFragment : Fragment(), ILoadOrderCallbackListener {
 
     private fun loadOrderFromFirebase() {
         dialog.show()
-        val orderList = ArrayList<Order>()
+        val orderList = ArrayList<OrderModel>()
 
         FirebaseDatabase.getInstance().getReference(Common.ORDER_REF)
             .orderByChild("userId")
@@ -71,7 +70,7 @@ class ViewOrderFragment : Fragment(), ILoadOrderCallbackListener {
                 override fun onDataChange(p0: DataSnapshot) {
                     for (orderSnapShot in p0.children)
                     {
-                        val order = orderSnapShot.getValue(Order::class.java)
+                        val order = orderSnapShot.getValue(OrderModel::class.java)
                         order!!.orderNumber = orderSnapShot.key
                         orderList.add(order!!)
                     }
@@ -94,7 +93,7 @@ class ViewOrderFragment : Fragment(), ILoadOrderCallbackListener {
         recycler_order.addItemDecoration(DividerItemDecoration(context!!,layoutManager.orientation))
     }
 
-    override fun onLoadOrderSuccess(orderList: List<Order>) {
+    override fun onLoadOrderSuccess(orderList: List<OrderModel>) {
         //We need implement it
         dialog.dismiss()
         viewOrderModel!!.setMutableLiveDataOrderList(orderList)

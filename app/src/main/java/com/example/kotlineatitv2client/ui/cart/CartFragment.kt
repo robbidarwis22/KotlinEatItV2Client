@@ -1,14 +1,11 @@
 package com.example.kotlineatitv2client.ui.cart
 
-import android.app.Activity
-import android.content.Intent
 import android.graphics.Color
 import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.os.Looper
 import android.os.Parcelable
-import android.text.TextUtils
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -20,8 +17,6 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.braintreepayments.api.dropin.DropInRequest
-import com.braintreepayments.api.dropin.DropInResult
 import com.example.kotlineatitv2client.Adapter.MyCartAdapter
 import com.example.kotlineatitv2client.Callback.ILoadTimeFromFirebaseCallback
 import com.example.kotlineatitv2client.Callback.IMyButtonCallback
@@ -29,16 +24,14 @@ import com.example.kotlineatitv2client.Common.Common
 import com.example.kotlineatitv2client.Common.MySwipeHelper
 import com.example.kotlineatitv2client.Database.CartDataSource
 import com.example.kotlineatitv2client.Database.CartDatabase
-import com.example.kotlineatitv2client.Database.CartItem
 import com.example.kotlineatitv2client.Database.LocalCartDataSource
 import com.example.kotlineatitv2client.EventBus.CountCartEvent
 import com.example.kotlineatitv2client.EventBus.HideFABCart
 import com.example.kotlineatitv2client.EventBus.MenuItemBack
 import com.example.kotlineatitv2client.EventBus.UpdateItemInCart
-import com.example.kotlineatitv2client.Model.Order
+import com.example.kotlineatitv2client.Model.OrderModel
 import com.example.kotlineatitv2client.R
 import com.example.kotlineatitv2client.Remote.ICloudFunctions
-import com.example.kotlineatitv2client.Remote.RetrofitCloudClient
 import com.google.android.gms.location.*
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -49,10 +42,8 @@ import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import io.reactivex.observers.DisposableObserver
 import io.reactivex.observers.DisposableSingleObserver
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.fragment_cart.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -128,7 +119,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
                   group_place_holder!!.visibility = View.VISIBLE
                   txt_empty_cart!!.visibility = View.GONE
 
-                  val adapter = MyCartAdapter(context!!,it)
+                  adapter = MyCartAdapter(context!!,it)
                   recycler_cart!!.adapter = adapter
               }
             })
@@ -183,35 +174,36 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
                 buffer: MutableList<MyButton>
             ) {
                 buffer.add(MyButton(context!!,
-                "Delete",
-                30,
-                0,
-                Color.parseColor("#FF3C30"),
-                object : IMyButtonCallback{
-                    override fun onClick(pos: Int) {
-                        val deleteItem = adapter!!.getItemAtPosition(pos)
-                        cartDataSource!!.deleteCart(deleteItem)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(object:SingleObserver<Int>{
-                                override fun onSuccess(t: Int) {
-                                    adapter!!.notifyItemRemoved(pos)
-                                    sumCart()
-                                    EventBus.getDefault().postSticky(CountCartEvent(true))
-                                    Toast.makeText(context,"Delete Item Success",Toast.LENGTH_SHORT).show()
-                                }
+                    "Delete",
+                    30,
+                    0,
+                     Color.parseColor("#FF3C30"),
+                    object:IMyButtonCallback{
+                        override fun onClick(pos: Int) {
+                            val deleteItem = adapter!!.getItemAtPosition(pos)
+                            cartDataSource!!.deleteCart(deleteItem)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(object:SingleObserver<Int>{
+                                    override fun onSuccess(t: Int) {
+                                        adapter!!.notifyItemRemoved(pos)
+                                        sumCart()
+                                        EventBus.getDefault().postSticky(CountCartEvent(true))
+                                        Toast.makeText(context,"Delete item success",Toast.LENGTH_SHORT).show()
+                                    }
 
-                                override fun onSubscribe(d: Disposable) {
-                                }
+                                    override fun onSubscribe(d: Disposable) {
 
-                                override fun onError(e: Throwable) {
-                                    Toast.makeText(context,""+e.message,Toast.LENGTH_SHORT).show()
-                                }
+                                    }
 
-                            })
-                    }
+                                    override fun onError(e: Throwable) {
+                                        Toast.makeText(context,""+e.message,Toast.LENGTH_SHORT).show()
+                                    }
 
-                }))
+                                } )
+                        }
+
+                    }))
             }
 
         }
@@ -335,7 +327,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
                         .subscribe(object:SingleObserver<Double>{
                             override fun onSuccess(totalPrice: Double) {
                                 val finalPrice = totalPrice
-                                val order = Order()
+                                val order = OrderModel()
                                 order.userId = Common.currentUser!!.uid!!
                                 order.userName = Common.currentUser!!.name!!
                                 order.userPhone = Common.currentUser!!.phone!!
@@ -372,7 +364,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
                 },{ throwable -> Toast.makeText(context!!,""+throwable.message,Toast.LENGTH_SHORT).show() }))
     }
 
-    private fun syncLocalTimeWithServerTime(order: Order) {
+    private fun syncLocalTimeWithServerTime(order: OrderModel) {
         val offsetRef = FirebaseDatabase.getInstance().getReference(".info/serverTimeOffset")
         offsetRef.addListenerForSingleValueEvent(object:ValueEventListener{
             override fun onCancelled(p0: DatabaseError) {
@@ -391,7 +383,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
         })
     }
 
-    private fun writeOrderToFirebase(order: Order) {
+    private fun writeOrderToFirebase(order: OrderModel) {
         FirebaseDatabase.getInstance()
             .getReference(Common.ORDER_REF)
             .child(Common.createOrderNumber())
@@ -442,11 +434,11 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
         }
     }
 
-    private fun sumCart() {
+    private fun sumCart(){
         cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : SingleObserver<Double>{
+            .subscribe(object:SingleObserver<Double>{
                 override fun onSuccess(t: Double) {
                     txt_total_price!!.text = StringBuilder("Total: $")
                         .append(t)
@@ -463,6 +455,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
 
             })
     }
+
 
     override fun onStart() {
         super.onStart()
@@ -566,7 +559,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onLoadTimeSuccess(order: Order, estimatedTimeMs: Long) {
+    override fun onLoadTimeSuccess(order: OrderModel, estimatedTimeMs: Long) {
         order.createDate = (estimatedTimeMs)
         order.orderStatus = 0
         writeOrderToFirebase(order)

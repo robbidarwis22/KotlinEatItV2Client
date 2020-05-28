@@ -1,6 +1,5 @@
 package com.example.kotlineatitv2client.ui.foodlist
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.kotlineatitv2client.Common.Common

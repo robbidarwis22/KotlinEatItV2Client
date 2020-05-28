@@ -2,7 +2,7 @@ package com.example.kotlineatitv2client.Model
 
 import com.example.kotlineatitv2client.Database.CartItem
 
-class Order {
+class OrderModel {
     var userId:String?=null
     var userName:String?=null
     var userPhone:String?=null

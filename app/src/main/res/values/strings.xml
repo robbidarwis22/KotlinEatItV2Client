@@ -26,5 +26,6 @@
     <string name="menu_send">Send</string>
     <string name="action_clear_cart">Clear Cart</string>
     <string name="sign_out">Sign Out</string>
+    <string name="action_search">Search</string>
 
 </resources>

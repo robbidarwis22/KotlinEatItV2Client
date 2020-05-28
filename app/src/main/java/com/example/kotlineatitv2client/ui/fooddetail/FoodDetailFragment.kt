@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -208,6 +209,8 @@ class FoodDetailFragment : Fragment(), TextWatcher {
     }
 
     private fun initViews(root: View?) {
+
+        (activity as AppCompatActivity).supportActionBar!!.setTitle(Common.foodSelected!!.name)
 
         cartDataSource = LocalCartDataSource(CartDatabase.getInstance(context!!).cartDAO())
 
