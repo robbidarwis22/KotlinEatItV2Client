@@ -9,7 +9,7 @@ import java.time.temporal.TemporalAmount
 
 interface ICloudFunctions {
 //    @GET("token")
-//    fun getToken(@HeaderMap header:Map<String>): Observable<BraintreeToken>
+//    fun getToken(@HeaderMap headers:Map<String,String>): Observable<BraintreeToken>
     @GET("getCustomToken")
     fun getCustomToken(@Query("access_token") accessToken: String):Observable<ResponseBody>
 //    @POST("checkout")

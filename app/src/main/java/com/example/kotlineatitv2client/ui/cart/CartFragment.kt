@@ -29,9 +29,14 @@ import com.example.kotlineatitv2client.EventBus.CountCartEvent
 import com.example.kotlineatitv2client.EventBus.HideFABCart
 import com.example.kotlineatitv2client.EventBus.MenuItemBack
 import com.example.kotlineatitv2client.EventBus.UpdateItemInCart
+import com.example.kotlineatitv2client.Model.FCMResponse
+import com.example.kotlineatitv2client.Model.FCMSendData
 import com.example.kotlineatitv2client.Model.OrderModel
 import com.example.kotlineatitv2client.R
 import com.example.kotlineatitv2client.Remote.ICloudFunctions
+import com.example.kotlineatitv2client.Remote.IFCMService
+import com.example.kotlineatitv2client.Remote.RetrofitCloudClient
+import com.example.kotlineatitv2client.Remote.RetrofitFCMClient
 import com.google.android.gms.location.*
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -76,6 +81,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
     internal var comment:String=""
 
     lateinit var cloudFunctions:ICloudFunctions
+    lateinit var ifcmService: IFCMService
 
     lateinit var listener:ILoadTimeFromFirebaseCallback
 
@@ -156,6 +162,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
         setHasOptionsMenu(true) //Important, if not add it,menu will never be inflate
 
 //        cloudFunctions = RetrofitCloudClient.getInstance().create(ICloudFunctions::class.java)
+        ifcmService = RetrofitFCMClient.getInstance().create(IFCMService::class.java)
 
         listener = this
 
@@ -356,7 +363,8 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
                             }
 
                             override fun onError(e: Throwable) {
-                                Toast.makeText(context!!,""+e.message,Toast.LENGTH_SHORT).show()
+                                if (!e.message!!.contains("Query returned empty"))
+                                    Toast.makeText(context,"[SUM CART]"+e.message,Toast.LENGTH_SHORT).show()
                             }
 
                         })
@@ -398,7 +406,27 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(object:SingleObserver<Int>{
                             override fun onSuccess(t: Int) {
-                                Toast.makeText(context!!,"Order placed successfully",Toast.LENGTH_SHORT).show()
+
+                                val dataSend = HashMap<String,String>()
+                                dataSend.put(Common.NOTI_TITLE,"New Order")
+                                dataSend.put(Common.NOTI_CONTENT,"You have new order "+Common.currentUser!!.phone)
+
+                                val sendData = FCMSendData(Common.getNewOrderTopic(),dataSend)
+
+                                compositeDisposable.add(
+                                    ifcmService.sendNotification(sendData)
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribe({t: FCMResponse? ->
+                                            if (t!!.success != 0)
+                                                Toast.makeText(context!!,"Order placed successfully",Toast.LENGTH_SHORT).show()
+
+                                        },{t: Throwable? ->
+
+                                            Toast.makeText(context!!,"Order was sent but notification failed",Toast.LENGTH_SHORT).show()
+                                        }))
+
+
                             }
 
                             override fun onSubscribe(d: Disposable) {

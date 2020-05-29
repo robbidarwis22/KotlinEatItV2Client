@@ -143,6 +143,10 @@ object Common {
         notificationManager.notify(id,notification)
     }
 
+    fun getNewOrderTopic(): String? {
+        return StringBuilder("/topics/new_order").toString()
+    }
+
 //    fun buildToken(authorizeToken: String): String{
 //        return StringBuilder("Bearer").append("").append(authorizeToken).toString()
 //    }
