@@ -37,7 +37,13 @@ import com.example.kotlineatitv2client.Remote.ICloudFunctions
 import com.example.kotlineatitv2client.Remote.IFCMService
 import com.example.kotlineatitv2client.Remote.RetrofitCloudClient
 import com.example.kotlineatitv2client.Remote.RetrofitFCMClient
+import com.google.android.gms.common.api.Status
 import com.google.android.gms.location.*
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -58,6 +64,15 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
+
+    private var placeSelected: Place?=null
+    private var places_fragment: AutocompleteSupportFragment?=null
+    private lateinit var placeClient: PlacesClient
+    private var placeFields = Arrays.asList(
+        Place.Field.ID,
+        Place.Field.NAME,
+        Place.Field.ADDRESS,
+        Place.Field.LAT_LNG)
 
     private val REQUEST_BRAINTREE_CODE: Int = 8888
     private var cartDataSource:CartDataSource?=null
@@ -159,6 +174,8 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
 
     private fun initViews(root:View) {
 
+        initPlacesClient()
+
         setHasOptionsMenu(true) //Important, if not add it,menu will never be inflate
 
 //        cloudFunctions = RetrofitCloudClient.getInstance().create(ICloudFunctions::class.java)
@@ -228,7 +245,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
 
             val view = LayoutInflater.from(context).inflate(R.layout.layout_place_order,null)
 
-            val edt_address = view.findViewById<View>(R.id.edt_address) as EditText
+
             val edt_comment = view.findViewById<View>(R.id.edt_comment) as EditText
             val txt_address = view.findViewById<View>(R.id.txt_address_detail) as TextView
             val rdi_home = view.findViewById<View>(R.id.rdi_home_address) as RadioButton
@@ -237,23 +254,36 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
             val rdi_cod = view.findViewById<View>(R.id.rdi_cod) as RadioButton
             val rdi_braintree = view.findViewById<View>(R.id.rdi_braintree) as RadioButton
 
+            places_fragment = activity!!.supportFragmentManager.findFragmentById(R.id.places_autocomplete_fragment)
+                    as AutocompleteSupportFragment
+            places_fragment!!.setPlaceFields(placeFields)
+            places_fragment!!.setOnPlaceSelectedListener(object: PlaceSelectionListener {
+                override fun onPlaceSelected(p0: Place) {
+                    placeSelected = p0
+                    txt_address.text = placeSelected!!.address
+                }
+
+                override fun onError(p0: Status) {
+                    Toast.makeText(context,""+p0.statusMessage,Toast.LENGTH_SHORT).show()
+                }
+
+            })
+
             //Data
-            edt_address.setText(Common.currentUser!!.address!!) //By default we checked rdi_home, so we will display user's address
+            txt_address.setText(Common.currentUser!!.address!!) //By default we checked rdi_home, so we will display user's address
 
             //Event
             rdi_home.setOnCheckedChangeListener { compoundButton, b ->
                 if (b)
                 {
-                    edt_address.setText(Common.currentUser!!.address!!)
-                    txt_address.visibility = View.GONE
+                    txt_address.setText(Common.currentUser!!.address!!)
+
                 }
             }
             rdi_other_address.setOnCheckedChangeListener { compoundButton, b ->
                 if (b)
                 {
-                    edt_address.setText("")
-                    edt_address.setHint("Enter your address")
-                    txt_address.visibility = View.GONE
+                   txt_address.setText("")
                 }
             }
             rdi_ship_to_this_address.setOnCheckedChangeListener { compoundButton, b ->
@@ -277,14 +307,10 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
 
                             val disposable = singleAddress.subscribeWith(object:DisposableSingleObserver<String>(){
                                 override fun onSuccess(t: String) {
-                                    edt_address.setText(coordinates)
-                                    txt_address.visibility = View.VISIBLE
                                     txt_address.setText(t)
                                 }
 
                                 override fun onError(e: Throwable) {
-                                    edt_address.setText(coordinates)
-                                    txt_address.visibility = View.VISIBLE
                                     txt_address.setText(e.message!!)
                                 }
 
@@ -300,10 +326,10 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
                 .setPositiveButton(
                     "Yes",{dialogInterface, _ ->
                         if (rdi_cod.isChecked)
-                            paymentCOD(edt_address.text.toString(),edt_comment.text.toString())
+                            paymentCOD(txt_address.text.toString(),edt_comment.text.toString())
 //                        else if(rdi_braintree.isChecked)
 //                        {
-//                            address = edt_address.text.toString()
+//                            address = txt_address.text.toString()
 //                            comment = edt_comment.text.toString()
 //
 //                            if (!TextUtils.isEmpty(Common.currenToken))
@@ -319,6 +345,11 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
             dialog.show()
         }
 
+    }
+
+    private fun initPlacesClient() {
+        Places.initialize(context!!,getString(R.string.google_maps_key))
+        placeClient = Places.createClient(context!!)
     }
 
     private fun paymentCOD(address: String, comment: String) {

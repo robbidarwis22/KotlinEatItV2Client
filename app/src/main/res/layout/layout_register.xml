@@ -17,18 +17,21 @@
             android:layout_height="wrap_content"/>
     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.textfield.TextInputLayout
+    <fragment
+        android:id="@+id/places_autocomplete_fragment"
+        android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"/>
 
-        <EditText
-            android:id="@+id/edt_address"
-            android:hint="Your Address"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-        </EditText>
-    </com.google.android.material.textfield.TextInputLayout>
+    <TextView
+        android:id="@+id/txt_address_detail"
+        android:text="Your Address"
+        android:fontFamily="@font/brandon_medium"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"

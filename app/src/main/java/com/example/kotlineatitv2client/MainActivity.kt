@@ -11,12 +11,19 @@ import android.content.DialogInterface
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.widget.EditText
+import android.widget.TextView
 import com.example.kotlineatitv2client.Common.Common
 import com.example.kotlineatitv2client.Model.UserModel
 import com.example.kotlineatitv2client.Remote.ICloudFunctions
 import com.example.kotlineatitv2client.Remote.RetrofitCloudClient
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
+import com.google.android.gms.common.api.Status
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
@@ -35,6 +42,14 @@ import io.reactivex.schedulers.Schedulers
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
+
+    private var placeSelected: Place?=null
+    private var places_fragment:AutocompleteSupportFragment?=null
+    private lateinit var placeClient:PlacesClient
+    private var placeFields = Arrays.asList(Place.Field.ID,
+    Place.Field.NAME,
+    Place.Field.ADDRESS,
+    Place.Field.LAT_LNG)
 
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var listener:FirebaseAuth.AuthStateListener
@@ -69,6 +84,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun init() {
+
+        Places.initialize(this,getString(R.string.google_maps_key))
+        placeClient = Places.createClient(this)
+
         providers = Arrays.asList<AuthUI.IdpConfig>(AuthUI.IdpConfig.PhoneBuilder().build())
         userRef = FirebaseDatabase.getInstance().getReference(Common.USER_REFERENCE)
         firebaseAuth = FirebaseAuth.getInstance()
@@ -184,8 +203,23 @@ class MainActivity : AppCompatActivity() {
             LayoutInflater.from(this@MainActivity).inflate(R.layout.layout_register, null)
 
         val edt_name = itemView.findViewById<EditText>(R.id.edt_name)
-        val edt_address = itemView.findViewById<EditText>(R.id.edt_address)
         val edt_phone = itemView.findViewById<EditText>(R.id.edt_phone)
+        val txt_address = itemView.findViewById<TextView>(R.id.txt_address_detail)
+
+        places_fragment = supportFragmentManager.findFragmentById(R.id.places_autocomplete_fragment)
+        as AutocompleteSupportFragment
+        places_fragment!!.setPlaceFields(placeFields)
+        places_fragment!!.setOnPlaceSelectedListener(object:PlaceSelectionListener{
+            override fun onPlaceSelected(p0: Place) {
+                placeSelected = p0
+                txt_address.text = placeSelected!!.address
+            }
+
+            override fun onError(p0: Status) {
+                Toast.makeText(this@MainActivity,""+p0.statusMessage,Toast.LENGTH_SHORT).show()
+            }
+
+        })
 
         //set
         edt_phone.setText(user!!.phoneNumber)
@@ -193,33 +227,48 @@ class MainActivity : AppCompatActivity() {
         builder.setView(itemView)
         builder.setNegativeButton("CANCEL") { dialogInterface, i -> dialogInterface.dismiss() }
         builder.setPositiveButton("REGISTER") { dialogInterface, i ->
-            if (TextUtils.isDigitsOnly(edt_name.text.toString())) {
-                Toast.makeText(this@MainActivity, "Please Enter Your Name", Toast.LENGTH_SHORT).show()
-                return@setPositiveButton
-            }
-            else if (TextUtils.isDigitsOnly(edt_address.text.toString())) {
-                Toast.makeText(this@MainActivity, "Please Enter Your Address", Toast.LENGTH_SHORT).show()
-                return@setPositiveButton
-            }
-            val userModel = UserModel()
-            userModel.uid = user!!.uid
-            userModel.name = edt_name.text.toString()
-            userModel.address = edt_address.text.toString()
-            userModel.phone = edt_phone.text.toString()
 
-            userRef!!.child(user!!.uid).setValue(userModel).addOnCompleteListener{task ->
-                if(task.isSuccessful)
-                {
-                    dialogInterface.dismiss()
-                    Toast.makeText(this@MainActivity, "Congratulation! Register Successfully", Toast.LENGTH_SHORT).show()
-                    goToHomeActivity(userModel)
-
+            if (placeSelected != null) {
+                if (TextUtils.isDigitsOnly(edt_name.text.toString())) {
+                    Toast.makeText(this@MainActivity, "Please Enter Your Name", Toast.LENGTH_SHORT)
+                        .show()
+                    return@setPositiveButton
                 }
+
+                val userModel = UserModel()
+                userModel.uid = user!!.uid
+                userModel.name = edt_name.text.toString()
+                userModel.address = txt_address.text.toString()
+                userModel.phone = edt_phone.text.toString()
+                userModel.lat = placeSelected!!.latLng!!.latitude
+                userModel.lng = placeSelected!!.latLng!!.longitude
+
+                userRef!!.child(user!!.uid).setValue(userModel).addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        dialogInterface.dismiss()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Congratulation! Register Successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        goToHomeActivity(userModel)
+
+                    }
+                }
+            }
+            else
+            {
+                Toast.makeText(this@MainActivity,"Please select address",Toast.LENGTH_SHORT).show()
             }
         }
 
         //PENTING! TAMPILKAN PESAN DIALOG
         val dialog = builder.create()
+        dialog.setOnDismissListener {
+            val fragmentTransaction = supportFragmentManager.beginTransaction()
+            fragmentTransaction.remove(places_fragment!!)
+            fragmentTransaction.commit()
+        }
         dialog.show()
     }
 

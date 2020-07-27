@@ -26,6 +26,9 @@
     <string name="menu_send">Send</string>
     <string name="action_clear_cart">Clear Cart</string>
     <string name="sign_out">Sign Out</string>
+    <string name="update_info">Update Info</string>
     <string name="action_search">Search</string>
+
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyDui4L-pdZgWdyomAGms2_v2qoWj675qeI</string>
 
 </resources>
