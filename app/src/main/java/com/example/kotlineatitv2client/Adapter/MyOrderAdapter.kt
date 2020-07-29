@@ -16,7 +16,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MyOrderAdapter (private val context:Context,
-private val orderList:List<OrderModel>):
+private val orderList:MutableList<OrderModel>):
     RecyclerView.Adapter<MyOrderAdapter.MyViewHolder>(){
 
     internal var calendar : Calendar
@@ -46,6 +46,15 @@ private val orderList:List<OrderModel>):
 
     override fun getItemCount(): Int {
         return orderList.size
+    }
+    
+    fun getItemAtPosition(position:Int):OrderModel{
+        return orderList[position]
+    }
+
+    fun setItemAtPosition(position:Int,orderModel:OrderModel)
+    {
+        orderList[position] = orderModel
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
