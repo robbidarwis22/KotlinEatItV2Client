@@ -2,6 +2,7 @@ package com.example.kotlineatitv2client.ui.view_orders
 
 import android.app.AlertDialog
 import android.content.DialogInterface
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -25,7 +26,9 @@ import com.example.kotlineatitv2client.EventBus.CountCartEvent
 import com.example.kotlineatitv2client.EventBus.MenuItemBack
 import com.example.kotlineatitv2client.Model.OrderModel
 import com.example.kotlineatitv2client.Model.RefundRequestModel
+import com.example.kotlineatitv2client.Model.ShippingOrderModel
 import com.example.kotlineatitv2client.R
+import com.example.kotlineatitv2client.TrackingOrderActivity
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -221,6 +224,52 @@ class ViewOrderFragment : Fragment(), ILoadOrderCallbackListener {
                         }
 
                     }))
+
+                        //Tracking button
+                    buffer.add(MyButton(context!!,
+                    "Tracking Order",
+                    30,
+                    0,
+                    Color.parseColor("#001970"),
+                    object: IMyButtonCallback {
+                        override fun onClick(pos: Int) {
+                            val orderModel = (recycler_order.adapter as MyOrderAdapter).getItemAtPosition(pos)
+                            //fetch from firebase
+                            FirebaseDatabase.getInstance()
+                                .getReference(Common.SHIPPING_ORDER_REF)
+                                .child(orderModel.orderNumber!!)
+                                .addListenerForSingleValueEvent(object:ValueEventListener{
+                                    override fun onCancelled(p0: DatabaseError) {
+                                        Toast.makeText(context!!,p0.message,Toast.LENGTH_SHORT).show()
+                                    }
+
+                                    override fun onDataChange(p0: DataSnapshot) {
+                                        if (p0.exists())
+                                        {
+                                            Common.currentShippingOrder = p0.getValue(
+                                                ShippingOrderModel::class.java)
+                                            if (Common.currentShippingOrder!!.currentLat!! != -1.0 &&
+                                                Common.currentShippingOrder!!.currentLng!! != -1.0)
+                                            {
+                                                startActivity(Intent(context!!,
+                                                    TrackingOrderActivity::class.java))
+                                            }
+                                            else
+                                            {
+                                                Toast.makeText(context!!,"Your order has not been ship, please wait",Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Toast.makeText(context!!,"You just place your order, please wait it shipping",Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+
+                                })
+                        }
+
+                    }))
+
             }
 
         }

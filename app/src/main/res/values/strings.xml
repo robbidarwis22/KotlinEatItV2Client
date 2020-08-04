@@ -30,5 +30,6 @@
     <string name="action_search">Search</string>
 
     <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyDui4L-pdZgWdyomAGms2_v2qoWj675qeI</string>
+    <string name="title_activity_tracking_order">Map</string>
 
 </resources>

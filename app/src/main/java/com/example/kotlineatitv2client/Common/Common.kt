@@ -19,6 +19,7 @@ import androidx.core.app.NotificationCompat
 import com.example.kotlineatitv2client.Model.*
 import com.example.kotlineatitv2client.R
 import com.example.kotlineatitv2client.Services.MyFCMServices
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.database.FirebaseDatabase
 import java.lang.StringBuilder
 import java.math.RoundingMode
@@ -147,10 +148,46 @@ object Common {
         return StringBuilder("/topics/new_order").toString()
     }
 
+    fun decodePoly(encoded: String): List<LatLng> {
+        val poly:MutableList<LatLng> = ArrayList<LatLng>()
+        var index = 0
+        var len = encoded.length
+        var lat = 0
+        var lng = 0
+        while (index < len)
+        {
+            var b:Int
+            var shift=0
+            var result = 0
+            do {
+                b = encoded[index++].toInt() - 63
+                result = result or (b and 0x1f shl shift)
+                shift +=5
+
+            }while (b >= 0x20)
+            val dlat = if (result and 1 != 0) (result shr 1).inv() else result shr 1
+            lat += dlat
+            shift = 0
+            result = 0
+            do {
+                b = encoded[index++].toInt() - 63
+                result = result or (b and 0x1f shl shift)
+                shift +=5
+            }while (b >= 0x20)
+            val dlng = if(result and 1 != 0) (result shr 1).inv() else result shr 1
+            lng += dlng
+            val p = LatLng(lat.toDouble() / 1E5,lng.toDouble()/1E5)
+            poly.add(p)
+        }
+        return poly
+    }
+
 //    fun buildToken(authorizeToken: String): String{
 //        return StringBuilder("Bearer").append("").append(authorizeToken).toString()
 //    }
 
+    var currentShippingOrder: ShippingOrderModel?=null
+    val SHIPPING_ORDER_REF: String="ShippingOrder" //same as server app
     val REFUND_REQUEST_REF: String="RefundRequest"
     const val NOTI_TITLE = "title"
     const val NOTI_CONTENT = "content"
