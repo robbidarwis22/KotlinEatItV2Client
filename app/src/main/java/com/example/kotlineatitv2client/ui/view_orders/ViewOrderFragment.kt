@@ -246,17 +246,17 @@ class ViewOrderFragment : Fragment(), ILoadOrderCallbackListener {
                                     override fun onDataChange(p0: DataSnapshot) {
                                         if (p0.exists())
                                         {
-                                            Common.currentShippingOrder = p0.getValue(
-                                                ShippingOrderModel::class.java)
+                                            Common.currentShippingOrder = p0.getValue(ShippingOrderModel::class.java)
+                                            Common.currentShippingOrder!!.key = p0.key
                                             if (Common.currentShippingOrder!!.currentLat!! != -1.0 &&
                                                 Common.currentShippingOrder!!.currentLng!! != -1.0)
                                             {
-                                                startActivity(Intent(context!!,
-                                                    TrackingOrderActivity::class.java))
+                                                startActivity(Intent(context!!,TrackingOrderActivity::class.java))
                                             }
                                             else
                                             {
                                                 Toast.makeText(context!!,"Your order has not been ship, please wait",Toast.LENGTH_SHORT).show()
+                                            
                                             }
                                         }
                                         else
