@@ -7,21 +7,21 @@ import io.reactivex.Single
 
 interface CartDataSource {
 
-    fun getAllCart(uid:String): Flowable<List<CartItem>>
+        fun getAllCart(uid:String): Flowable<List<CartItem>>
 
-    fun countItemInCart(uid:String): Single<Int>
+        fun countItemInCart(uid:String): Single<Int>
 
-    fun sumPrice(uid: String): Single<Double>
+        fun sumPrice(uid: String): Single<Double>
 
-    fun getItemInCart(foodId:String,uid:String): Single<CartItem>
+        fun getItemInCart(foodId:String,uid:String): Single<CartItem>
 
-    fun insertOrReplaceAll(vararg cartItem: CartItem) : Completable
+        fun insertOrReplaceAll(vararg cartItem: CartItem) : Completable
 
-    fun updateCart(cart:CartItem): Single<Int>
+        fun updateCart(cart:CartItem): Single<Int>
 
-    fun deleteCart(cart:CartItem): Single<Int>
+        fun deleteCart(cart:CartItem): Single<Int>
 
-    fun cleanCart(uid:String): Single<Int>
+        fun cleanCart(uid:String): Single<Int>
 
-    fun getItemWithAllOptionsInCart(uid:String,foodId:String,foodSize:String,foodAddon:String): Single<CartItem>
+        fun getItemWithAllOptionsInCart(uid:String,categoryId:String,foodId:String,foodSize:String,foodAddon:String): Single<CartItem>
 }

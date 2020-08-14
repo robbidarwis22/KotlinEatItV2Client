@@ -1,16 +1,21 @@
 package com.example.kotlineatitv2client.ui.cart
 
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.os.Looper
 import android.os.Parcelable
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.*
+import android.view.View.inflate
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -20,18 +25,18 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.kotlineatitv2client.Adapter.MyCartAdapter
 import com.example.kotlineatitv2client.Callback.ILoadTimeFromFirebaseCallback
 import com.example.kotlineatitv2client.Callback.IMyButtonCallback
+import com.example.kotlineatitv2client.Callback.ISearchCategoryCallbackListener
 import com.example.kotlineatitv2client.Common.Common
 import com.example.kotlineatitv2client.Common.MySwipeHelper
 import com.example.kotlineatitv2client.Database.CartDataSource
 import com.example.kotlineatitv2client.Database.CartDatabase
+import com.example.kotlineatitv2client.Database.CartItem
 import com.example.kotlineatitv2client.Database.LocalCartDataSource
 import com.example.kotlineatitv2client.EventBus.CountCartEvent
 import com.example.kotlineatitv2client.EventBus.HideFABCart
 import com.example.kotlineatitv2client.EventBus.MenuItemBack
 import com.example.kotlineatitv2client.EventBus.UpdateItemInCart
-import com.example.kotlineatitv2client.Model.FCMResponse
-import com.example.kotlineatitv2client.Model.FCMSendData
-import com.example.kotlineatitv2client.Model.OrderModel
+import com.example.kotlineatitv2client.Model.*
 import com.example.kotlineatitv2client.R
 import com.example.kotlineatitv2client.Remote.ICloudFunctions
 import com.example.kotlineatitv2client.Remote.IFCMService
@@ -44,10 +49,15 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import io.reactivex.Single
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -59,11 +69,12 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.io.IOException
-import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.text.StringBuilder
 
-class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
+class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback, ISearchCategoryCallbackListener, TextWatcher {
 
     private var placeSelected: Place?=null
     private var places_fragment: AutocompleteSupportFragment?=null
@@ -73,6 +84,11 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
         Place.Field.NAME,
         Place.Field.ADDRESS,
         Place.Field.LAT_LNG)
+
+    private lateinit var addonBottomSheetDialog: BottomSheetDialog
+    private var chip_group_user_selected_addon: ChipGroup?=null
+    private var chip_group_addon: ChipGroup?=null
+    private var edt_search_addon:EditText?=null
 
     private val REQUEST_BRAINTREE_CODE: Int = 8888
     private var cartDataSource:CartDataSource?=null
@@ -86,6 +102,8 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
     var group_place_holder:CardView?=null
     var recycler_cart:RecyclerView?=null
     var adapter:MyCartAdapter?=null
+
+    lateinit var searchCategoryCallbackListener:ISearchCategoryCallbackListener
 
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
@@ -174,6 +192,8 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
 
     private fun initViews(root:View) {
 
+        searchCategoryCallbackListener = this
+
         initPlacesClient()
 
         setHasOptionsMenu(true) //Important, if not add it,menu will never be inflate
@@ -184,6 +204,17 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
         listener = this
 
         cartDataSource = LocalCartDataSource(CartDatabase.getInstance(context!!).cartDAO())
+
+        addonBottomSheetDialog = BottomSheetDialog(context!!,R.style.DialogStyle)
+        val layout_user_selected_addon = layoutInflater.inflate(R.layout.layout_addon_display, null)
+        chip_group_addon = layout_user_selected_addon.findViewById(R.id.chip_group_addon) as ChipGroup
+        edt_search_addon = layout_user_selected_addon.findViewById(R.id.edt_search) as EditText
+        addonBottomSheetDialog.setContentView(layout_user_selected_addon)
+
+        addonBottomSheetDialog.setOnDismissListener { dialogInterface ->
+            displayUserSelectedAddon(chip_group_user_selected_addon)
+            calculateTotalPrice()
+        }
 
         recycler_cart = root.findViewById(R.id.recycler_cart) as RecyclerView
         recycler_cart!!.setHasFixedSize(true)
@@ -228,6 +259,39 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
                         }
 
                     }))
+
+                buffer.add(MyButton(context!!,
+                        "Update",
+                        30,
+                        0,
+                        Color.parseColor("#5d4037"),
+                        object:IMyButtonCallback{
+                            override fun onClick(pos: Int) {
+                               val cartItem = adapter!!.getItemAtPosition(pos)
+                                FirebaseDatabase.getInstance()
+                                        .getReference(Common.CATEGORY_REF)
+                                        .child(cartItem.categoryId)
+                                        .addListenerForSingleValueEvent(object:ValueEventListener{
+                                            override fun onCancelled(p0: DatabaseError) {
+                                                searchCategoryCallbackListener.onSearchNotFound(p0.message)
+                                            }
+
+                                            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                                if (dataSnapshot.exists())
+                                                {
+                                                    val categoryModel = dataSnapshot.getValue(CategoryModel::class.java)
+                                                    searchCategoryCallbackListener.onSearchFound(categoryModel!!,cartItem)
+                                                }
+                                                else
+                                                {
+                                                    searchCategoryCallbackListener.onSearchNotFound("Category not found")
+                                                }
+                                            }
+
+                                        })
+                            }
+
+                        }))
             }
 
         }
@@ -345,6 +409,27 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
             dialog.show()
         }
 
+    }
+
+    private fun displayUserSelectedAddon(chipGroupUserSelectedAddon: ChipGroup?) {
+        if (Common.foodSelected!!.userSelectedAddon != null && Common.foodSelected!!.userSelectedAddon!!.size > 0)
+        {
+            chipGroupUserSelectedAddon!!.removeAllViews()
+            for (addonModel in Common.foodSelected!!.userSelectedAddon!!)
+            {
+                val chip = layoutInflater.inflate(R.layout.layout_chip_with_delete,null) as Chip
+                chip.text = StringBuilder(addonModel.name!!).append("+($")
+                        .append(addonModel.price).append(")")
+                chip.setOnCheckedChangeListener { compoundButton, b ->
+                    if (b)
+                        if (Common.foodSelected!!.userSelectedAddon == null) Common.foodSelected!!.userSelectedAddon = ArrayList()
+                    Common.foodSelected!!.userSelectedAddon!!.add(addonModel)
+                }
+                chipGroupUserSelectedAddon.addView(chip)
+            }
+        }
+        else
+            chipGroupUserSelectedAddon!!.removeAllViews()
     }
 
     private fun initPlacesClient() {
@@ -631,5 +716,200 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
     override fun onDestroy() {
         EventBus.getDefault().postSticky(MenuItemBack())
         super.onDestroy()
+    }
+
+    override fun onSearchFound(category: CategoryModel, cartItem: CartItem) {
+        val foodModel:FoodModel = Common.findFoodInListById(category,cartItem!!.foodId)!!
+        if (foodModel != null)
+            showUpdateDialog(cartItem,foodModel)
+        else
+            Toast.makeText(context!!,"Food Id not found",Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showUpdateDialog(cartItem: CartItem, foodModel: FoodModel) {
+        Common.foodSelected = foodModel
+        val builder = AlertDialog.Builder(context!!)
+        val itemView:View = LayoutInflater.from(context!!).inflate(R.layout.layout_dialog_update_cart,null)
+        builder.setView(itemView)
+        
+        //View
+        val btn_ok = itemView.findViewById<View>(R.id.btn_ok) as Button
+        val btn_cancel = itemView.findViewById<View>(R.id.btn_cancel) as Button
+
+        val rdi_group_size = itemView.findViewById<View>(R.id.rdi_group_size) as RadioGroup
+        chip_group_user_selected_addon = itemView.findViewById<View>(R.id.chip_group_user_selected_addon) as ChipGroup
+        val img_add_on = itemView.findViewById<View>(R.id.img_add_addon) as ImageView
+
+        img_add_on.setOnClickListener {
+            if(foodModel.addon != null)
+            {
+                displayAddonList()
+                addonBottomSheetDialog!!.show()
+            }
+        }
+
+        //Size
+        if (foodModel.size != null)
+        {
+            for(sizeModel in foodModel.size)
+            {
+                val radioButton = RadioButton(context)
+                    radioButton.setOnCheckedChangeListener { compoundButton, b ->
+                        if (b) Common.foodSelected!!.userSelectedSize = sizeModel
+                        calculateTotalPrice()
+                    }
+                val params = LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.MATCH_PARENT,1.0f)
+                radioButton.layoutParams = params
+                radioButton.setText(sizeModel.name)
+                radioButton.tag = (sizeModel.price)
+                rdi_group_size.addView(radioButton)
+            }
+            if (rdi_group_size.childCount > 0)
+            {
+                val radioButton = rdi_group_size.getChildAt(0) as RadioButton
+                radioButton.isChecked = true //Default check
+            }
+        }
+
+        //Addon
+        displayAlreadySelectedAddon(chip_group_user_selected_addon!!,cartItem)
+
+        //Show Dialog
+        val dialog = builder.create()
+        dialog.show()
+
+        //Custom
+        dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window!!.setGravity(Gravity.CENTER)
+        //Event
+        btn_cancel.setOnClickListener { dialog.dismiss() }
+        btn_ok.setOnClickListener {
+
+            //Delete item first
+            cartDataSource!!.deleteCart(cartItem)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(object:SingleObserver<Int>{
+                        override fun onSuccess(t: Int) {
+                            //After delete success,we will update new information and add to cart again
+                            if (Common.foodSelected!!.userSelectedAddon != null)
+                                cartItem.foodAddon = Gson().toJson(Common.foodSelected!!.userSelectedAddon)
+                            else
+                                cartItem.foodAddon="Default"
+                            if (Common.foodSelected!!.userSelectedSize != null)
+                                cartItem.foodSize = Gson().toJson(Common.foodSelected!!.userSelectedSize)
+                            else
+                                cartItem.foodSize="Default"
+
+                            cartItem.foodExtraPrice = Common.calculateExtraPrice(Common.foodSelected!!.userSelectedSize,
+                            Common.foodSelected!!.userSelectedAddon!!)
+
+                            //Insert
+                            compositeDisposable.add(cartDataSource!!.insertOrReplaceAll(cartItem)
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe({
+                                        EventBus.getDefault().postSticky(CountCartEvent(true))
+                                        dialog.dismiss()
+                                        calculateTotalPrice()
+                                        Toast.makeText(context, "Update Cart Success", Toast.LENGTH_SHORT).show()
+//                                          //Here we will send a notifyto HomeActivity to Update CounterFab
+                                    }, { t: Throwable? ->
+                                        Toast.makeText(context, "[INSERT CART]" + t!!.message, Toast.LENGTH_SHORT).show()
+                                    }))
+                        }
+
+                        override fun onSubscribe(d: Disposable) {
+
+                        }
+
+                        override fun onError(e: Throwable) {
+                            Toast.makeText(context!!,e.message,Toast.LENGTH_SHORT).show()
+                        }
+
+                    })
+
+        }
+    }
+
+    private fun displayAlreadySelectedAddon(chipGroupUserSelectedAddon: ChipGroup, cartItem: CartItem) {
+        //This function will dispay all addon we already selected before add add to cart and display on layout
+        if (cartItem.foodAddon != null && !cartItem.equals("Default"))
+        {
+            val addonModels:List<AddonModel> = Gson().fromJson(cartItem.foodAddon, object : TypeToken<List<AddonModel>>(){}.type)
+            Common.foodSelected!!.userSelectedAddon = addonModels.toMutableList()
+            chipGroupUserSelectedAddon.removeAllViews()
+            //Add all view
+            for (addonModel in addonModels)
+            {
+                val chip = layoutInflater.inflate(R.layout.layout_chip_with_delete,null) as Chip
+                chip.text = StringBuilder(addonModel.name!!).append("(+$")
+                        .append(addonModel.price).append(")")
+                chip.isClickable = false
+                chip.setOnCloseIconClickListener {
+                    chipGroupUserSelectedAddon.removeView(it)
+                    Common.foodSelected!!.userSelectedAddon!!.remove(addonModel)
+                    calculateTotalPrice()
+                }
+                chipGroupUserSelectedAddon.addView(chip)
+            }
+        }
+    }
+
+    private fun displayAddonList() {
+        if (Common.foodSelected!!.addon != null && Common.foodSelected!!.addon.size > 0)
+        {
+            chip_group_addon!!.clearCheck()
+            chip_group_addon!!.removeAllViews()
+            edt_search_addon!!.addTextChangedListener(this)
+            //add all view
+            for(addonModel in Common.foodSelected!!.addon)
+            {
+                val chip = layoutInflater.inflate(R.layout.layout_chip,null) as Chip
+                chip.text = StringBuilder(addonModel.name!!).append("(+$")
+                        .append(addonModel.price).append(")")
+                chip.setOnCheckedChangeListener { compoundButton, b ->
+                    if (b)
+                        if (Common.foodSelected!!.userSelectedAddon == null)
+                            Common.foodSelected!!.userSelectedAddon = ArrayList()
+                    Common.foodSelected!!.userSelectedAddon!!.add(addonModel)
+                }
+                chip_group_addon!!.addView(chip)
+            }
+        }
+    }
+
+    override fun onSearchNotFound(message: String) {
+        Toast.makeText(context!!,message,Toast.LENGTH_SHORT).show()
+    }
+
+    override fun afterTextChanged(p0: Editable?) {
+
+    }
+
+    override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+    }
+
+    override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+        chip_group_addon!!.clearCheck()
+        chip_group_addon!!.removeAllViews()
+
+        for(addonModel in Common.foodSelected!!.addon)
+        {
+            if (addonModel.name!!.toLowerCase().contains(p0.toString().toLowerCase()))
+            {
+                val chip = layoutInflater.inflate(R.layout.layout_chip,null) as Chip
+                chip.text = StringBuilder(addonModel.name!!).append("(+$")
+                        .append(addonModel.price).append(")")
+                chip.setOnCheckedChangeListener { compoundButton, b ->
+                    if (b)
+                        if (Common.foodSelected!!.userSelectedAddon == null)
+                            Common.foodSelected!!.userSelectedAddon = ArrayList()
+                    Common.foodSelected!!.userSelectedAddon!!.add(addonModel)
+                }
+                chip_group_addon!!.addView(chip)
+            }
+        }
     }
 }

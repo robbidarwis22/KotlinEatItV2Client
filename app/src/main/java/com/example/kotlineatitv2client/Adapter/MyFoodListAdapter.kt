@@ -58,6 +58,7 @@ class MyFoodListAdapter (internal var context: Context,
             cartItem.uid = Common.currentUser!!.uid
             cartItem.userPhone = Common.currentUser!!.phone
 
+            cartItem.categoryId = Common.categorySelected!!.menu_id!!
             cartItem.foodId = foodList.get(position).id!!
             cartItem.foodName = foodList.get(position).name!!
             cartItem.foodImage = foodList.get(position).image!!
@@ -68,6 +69,7 @@ class MyFoodListAdapter (internal var context: Context,
             cartItem.foodSize = "Default"
 
             cartDataSource.getItemWithAllOptionsInCart(Common.currentUser!!.uid!!,
+                    cartItem.categoryId,
                     cartItem.foodId,
                     cartItem.foodSize!!,
                     cartItem.foodAddon!!)

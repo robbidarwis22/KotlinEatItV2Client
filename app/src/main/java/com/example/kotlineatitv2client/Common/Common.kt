@@ -21,10 +21,10 @@ import com.example.kotlineatitv2client.R
 import com.example.kotlineatitv2client.Services.MyFCMServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.database.FirebaseDatabase
-import java.lang.StringBuilder
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import kotlin.random.Random
+import kotlin.text.StringBuilder
 
 object Common {
     fun formatPrice(price: Double): String {
@@ -75,9 +75,9 @@ object Common {
 
     fun createOrderNumber(): String {
         return StringBuilder()
-            .append(System.currentTimeMillis())
-            .append(Math.abs(Random.nextInt()))
-            .toString()
+                .append(System.currentTimeMillis())
+                .append(Math.abs(Random.nextInt()))
+                .toString()
     }
 
     fun getDateOfWeek(i: Int): String {
@@ -107,10 +107,10 @@ object Common {
         //Fix error crash first time
         if (Common.currentUser != null)
             FirebaseDatabase.getInstance()
-                .getReference(Common.TOKEN_REF)
-                .child(Common.currentUser!!.uid!!)
-                .setValue(TokenModel(Common.currentUser!!.phone!!,token))
-                .addOnFailureListener{ e-> Toast.makeText(context,""+e.message,Toast.LENGTH_SHORT).show()}
+                    .getReference(Common.TOKEN_REF)
+                    .child(Common.currentUser!!.uid!!)
+                    .setValue(TokenModel(Common.currentUser!!.phone!!,token))
+                    .addOnFailureListener{ e-> Toast.makeText(context,""+e.message,Toast.LENGTH_SHORT).show()}
     }
 
     fun showNotification(context: Context, id: Int, title: String?, content: String?,intent:Intent?) {
@@ -123,7 +123,7 @@ object Common {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         {
             val notificationChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID,
-            "Eat It V2",NotificationManager.IMPORTANCE_DEFAULT)
+                    "Eat It V2",NotificationManager.IMPORTANCE_DEFAULT)
 
             notificationChannel.description = "Eat It V2"
             notificationChannel.enableLights(true)
@@ -136,8 +136,8 @@ object Common {
         val builder = NotificationCompat.Builder(context,NOTIFICATION_CHANNEL_ID)
 
         builder.setContentTitle(title!!).setContentText(content!!).setAutoCancel(true)
-            .setSmallIcon(R.mipmap.ic_launcher_round)
-            .setLargeIcon(BitmapFactory.decodeResource(context.resources,R.drawable.ic_restaurant_menu_black_24dp))
+                .setSmallIcon(R.mipmap.ic_launcher_round)
+                .setLargeIcon(BitmapFactory.decodeResource(context.resources,R.drawable.ic_restaurant_menu_black_24dp))
         if(pendingIntent != null)
             builder.setContentIntent(pendingIntent)
 
@@ -192,16 +192,35 @@ object Common {
         val lat = Math.abs(begin.latitude - end.latitude)
         val lng = Math.abs(begin.longitude - end.longitude)
         if (begin.latitude < end.latitude && begin.longitude < end.longitude) return Math.toDegrees(
-            Math.atan(lng / lat)
+                Math.atan(lng / lat)
         )
-            .toFloat() else if (begin.latitude >= end.latitude && begin.longitude < end.longitude) return (90 - Math.toDegrees(
-            Math.atan(lng / lat)
+                .toFloat() else if (begin.latitude >= end.latitude && begin.longitude < end.longitude) return (90 - Math.toDegrees(
+                Math.atan(lng / lat)
         ) + 90).toFloat() else if (begin.latitude >= end.latitude && begin.longitude >= end.longitude) return (Math.toDegrees(
-            Math.atan(lng / lat)
+                Math.atan(lng / lat)
         ) + 180).toFloat() else if (begin.latitude < end.latitude && begin.longitude >= end.longitude) return (90 - Math.toDegrees(
-            Math.atan(lng / lat)
+                Math.atan(lng / lat)
         ) + 270).toFloat()
         return (-1).toFloat()
+    }
+
+    fun findFoodInListById(category: CategoryModel, foodId: String): FoodModel? {
+        return if (category!!.foods != null && category.foods!!.size > 0)
+        {
+            for(foodModel in category!!.foods!!) if (foodModel.id.equals(foodId))
+                return foodModel
+            null
+        }else null
+    }
+
+    fun getListAddon(addonModels: List<AddonModel>): String {
+        val result = StringBuilder()
+        for (addonModel in addonModels)
+            result.append(addonModel.name).append(",")
+        if (!result.isEmpty())
+            return result.substring(0,result.length-1) //Remove last ","
+        else
+            return "Default"
     }
 
     var currentShippingOrder: ShippingOrderModel?=null
