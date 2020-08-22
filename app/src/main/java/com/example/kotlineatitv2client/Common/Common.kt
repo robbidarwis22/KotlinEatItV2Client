@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
@@ -113,7 +114,7 @@ object Common {
                     .addOnFailureListener{ e-> Toast.makeText(context,""+e.message,Toast.LENGTH_SHORT).show()}
     }
 
-    fun showNotification(context: Context, id: Int, title: String?, content: String?,intent:Intent?) {
+    fun showNotification(context: Context, id: Int, title: String?, content: String?, intent: Intent?) {
         var pendingIntent : PendingIntent?=null
         if (intent != null)
             pendingIntent = PendingIntent.getActivity(context,id,intent,PendingIntent.FLAG_UPDATE_CURRENT)
@@ -138,6 +139,40 @@ object Common {
         builder.setContentTitle(title!!).setContentText(content!!).setAutoCancel(true)
                 .setSmallIcon(R.mipmap.ic_launcher_round)
                 .setLargeIcon(BitmapFactory.decodeResource(context.resources,R.drawable.ic_restaurant_menu_black_24dp))
+        if(pendingIntent != null)
+            builder.setContentIntent(pendingIntent)
+
+        val notification = builder.build()
+
+        notificationManager.notify(id,notification)
+    }
+
+    fun showNotification(context: Context, id: Int, title: String?, content: String?, bitmap: Bitmap, intent:Intent?) {
+        var pendingIntent : PendingIntent?=null
+        if (intent != null)
+            pendingIntent = PendingIntent.getActivity(context,id,intent,PendingIntent.FLAG_UPDATE_CURRENT)
+        val NOTIFICATION_CHANNEL_ID = "com.example.eatitv2"
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        {
+            val notificationChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID,
+                "Eat It V2",NotificationManager.IMPORTANCE_DEFAULT)
+
+            notificationChannel.description = "Eat It V2"
+            notificationChannel.enableLights(true)
+            notificationChannel.enableVibration(true)
+            notificationChannel.lightColor = (Color.RED)
+            notificationChannel.vibrationPattern = longArrayOf(0,1000,500,1000)
+
+            notificationManager.createNotificationChannel(notificationChannel)
+        }
+        val builder = NotificationCompat.Builder(context,NOTIFICATION_CHANNEL_ID)
+
+        builder.setContentTitle(title!!).setContentText(content!!).setAutoCancel(true)
+            .setSmallIcon(R.mipmap.ic_launcher_round)
+            .setLargeIcon(bitmap)
+            .setStyle(NotificationCompat.BigPictureStyle().bigPicture(bitmap))
         if(pendingIntent != null)
             builder.setContentIntent(pendingIntent)
 
@@ -223,6 +258,10 @@ object Common {
             return "Default"
     }
 
+    val IMAGE_URL: String="IMAGE_URL"
+    val IS_SEND_IMAGE: String="IS_SEND_IMAGE"
+    val NEWS_TOPIC: String="news"
+    val IS_SUBSCRIBE_NEWS: String = "IS_SUBSCRIBE_NEWS"
     var currentShippingOrder: ShippingOrderModel?=null
     val SHIPPING_ORDER_REF: String="ShippingOrder" //same as server app
     val REFUND_REQUEST_REF: String="RefundRequest"
