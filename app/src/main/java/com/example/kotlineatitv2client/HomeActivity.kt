@@ -205,6 +205,7 @@ class HomeActivity : AppCompatActivity() {
                     }
             }
         })
+        builder.setView(itemView)
         val dialog = builder.create()
         dialog.show()
     }
