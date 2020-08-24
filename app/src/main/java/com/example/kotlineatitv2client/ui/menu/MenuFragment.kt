@@ -48,6 +48,7 @@ class MenuFragment : Fragment() {
         menuViewModel.getMessageError().observe(this, Observer {
             Toast.makeText(context,it,Toast.LENGTH_SHORT).show()
         })
+
         menuViewModel.getCategoryList().observe(this, Observer {
             dialog.dismiss()
             adapter = MyCategoriesAdapter(context!!, it)
