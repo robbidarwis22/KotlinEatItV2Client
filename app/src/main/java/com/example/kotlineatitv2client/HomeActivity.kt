@@ -525,6 +525,16 @@ class HomeActivity : AppCompatActivity() {
             supportFragmentManager.popBackStack();
     }
 
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    public fun onRestaurantClick(event:MenuItemEvent)
+    {
+        val bundle = Bundle()
+        bundle.putString("restaurant",event.restaurantModel.uid)
+        navController.navigate(R.id.nav_home,bundle)
+        navView!!.menu.clear()
+        navView!!.inflateMenu(R.menu.restaurant_detail_menu)
+    }
+
     private fun countCartItem() {
         cartDataSource.countItemInCart(Common.currentUser!!.uid!!)
                 .subscribeOn(Schedulers.io())

@@ -9,13 +9,25 @@
         android:id="@+id/nav_restaurant"
         android:name="com.example.kotlineatitv2client.ui.restaurant.RestaurantFragment"
         android:label="@string/menu_restaurant"
-        tools:layout="@layout/fragment_restaurant" />
+        tools:layout="@layout/fragment_restaurant">
+
+        <action
+            android:id="@+id/action_nav_restaurant_to_nav_home"
+            app:destination="@+id/nav_home"/>
+
+    </fragment>
 
     <fragment
         android:id="@+id/nav_home"
         android:name="com.example.kotlineatitv2client.ui.home.HomeFragment"
         android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+
+        <argument android:name="restaurant"
+            app:argType="string"
+            android:defaultValue="empty"/>
+
+    </fragment>
 
     <fragment
         android:id="@+id/nav_menu"

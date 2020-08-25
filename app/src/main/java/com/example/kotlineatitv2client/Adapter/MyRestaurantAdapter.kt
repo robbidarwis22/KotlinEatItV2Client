@@ -9,9 +9,12 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.kotlineatitv2client.Callback.IRecyclerItemClickListener
+import com.example.kotlineatitv2client.Common.Common
+import com.example.kotlineatitv2client.EventBus.MenuItemEvent
 import com.example.kotlineatitv2client.Model.CategoryModel
 import com.example.kotlineatitv2client.Model.RestaurantModel
 import com.example.kotlineatitv2client.R
+import org.greenrobot.eventbus.EventBus
 
 class MyRestaurantAdapter (internal var context: Context,
                            internal var restaurantList: List<RestaurantModel>) :
@@ -58,7 +61,8 @@ class MyRestaurantAdapter (internal var context: Context,
 
         holder.setListener(object : IRecyclerItemClickListener{
             override fun onItemClick(view: View, pos: Int) {
-                //Code late
+                Common.currentRestaurant = restaurantList[pos]
+                EventBus.getDefault().postSticky(MenuItemEvent(true,restaurantList[pos]))
             }
 
         })
