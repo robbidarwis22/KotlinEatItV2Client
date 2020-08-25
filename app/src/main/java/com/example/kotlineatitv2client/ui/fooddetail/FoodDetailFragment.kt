@@ -259,6 +259,7 @@ class FoodDetailFragment : Fragment(), TextWatcher {
 
         btnCart!!.setOnClickListener {
             val cartItem = CartItem()
+            cartItem.restaurantId = Common.currentRestaurant!!.uid
             cartItem.uid = Common.currentUser!!.uid
             cartItem.userPhone = Common.currentUser!!.phone
 
@@ -283,7 +284,8 @@ class FoodDetailFragment : Fragment(), TextWatcher {
                     cartItem.categoryId,
                     cartItem.foodId,
                     cartItem.foodSize!!,
-                    cartItem.foodAddon!!)
+                    cartItem.foodAddon!!,
+                    Common.currentRestaurant!!.uid)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(object: SingleObserver<CartItem> {

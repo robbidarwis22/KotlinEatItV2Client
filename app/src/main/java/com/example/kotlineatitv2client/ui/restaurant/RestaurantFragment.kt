@@ -18,8 +18,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.kotlineatitv2client.Adapter.MyCategoriesAdapter
 import com.example.kotlineatitv2client.Adapter.MyRestaurantAdapter
 import com.example.kotlineatitv2client.Common.SpacesItemDecoration
+import com.example.kotlineatitv2client.EventBus.CountCartEvent
+import com.example.kotlineatitv2client.EventBus.HideFABCart
+import com.example.kotlineatitv2client.EventBus.MenuInflateEvent
 import com.example.kotlineatitv2client.R
 import dmax.dialog.SpotsDialog
+import org.greenrobot.eventbus.EventBus
 
 class RestaurantFragment : Fragment() {
 
@@ -56,6 +60,8 @@ class RestaurantFragment : Fragment() {
     }
 
     private fun initViews(root: View?) {
+
+        EventBus.getDefault().postSticky(HideFABCart(true)) //Hide cart when show restaurant list
         setHasOptionsMenu(true)
 
         dialog = SpotsDialog.Builder().setContext(context).setCancelable(false).build()
@@ -71,5 +77,10 @@ class RestaurantFragment : Fragment() {
         recycler_restaurant!!.addItemDecoration(DividerItemDecoration(context!!,layoutManager.orientation))
     }
 
+    override fun onResume() {
+        super.onResume()
+        EventBus.getDefault().postSticky(MenuInflateEvent(false)) //Show detail menu
+        EventBus.getDefault().postSticky(CountCartEvent(true)) //Count cart
+    }
 
 }
