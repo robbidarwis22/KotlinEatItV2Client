@@ -121,7 +121,9 @@ class TrackingOrderActivity : AppCompatActivity(), OnMapReadyCallback, ValueEven
 
     private fun subscribeShipperMove() {
         shipperRef = FirebaseDatabase.getInstance()
-            .getReference(Common.SHIPPING_ORDER_REF)
+            .getReference(Common.RESTAURANT_REF)
+            .child(Common.currentRestaurant!!.uid!!)
+            .child(Common.SHIPPING_ORDER_REF)
             .child(Common.currentShippingOrder!!.key!!)
         shipperRef.addValueEventListener(this)
     }

@@ -181,8 +181,13 @@ object Common {
         notificationManager.notify(id,notification)
     }
 
-    fun getNewOrderTopic(): String? {
-        return StringBuilder("/topics/new_order").toString()
+    fun getNewOrderTopic(): String {
+        //return something like "/topics/restaurantid_new_order"
+        return StringBuilder("/topics/")
+            .append(Common.currentRestaurant!!.uid)
+            .append("_")
+            .append("new_order")
+            .toString()
     }
 
     fun decodePoly(encoded: String): List<LatLng> {
@@ -268,28 +273,35 @@ object Common {
     }
 
     var currentRestaurant: RestaurantModel?=null
-    val RESTAURANT_REF: String = "Restaurant"
+    const val RESTAURANT_REF: String = "Restaurant"
+    const val SHIPPING_ORDER_REF: String="ShippingOrder" //same as server app
+    const val REFUND_REQUEST_REF: String="RefundRequest"
+    const val ORDER_REF: String = "Order"
+    const val COMMENT_REF: String = "Comment"
+    const val BEST_DEAL_REF: String="BestDeals"
+    const val POPULAR_REF: String="MostPopular"
+    const val USER_REFERENCE="Users"
+    const val CATEGORY_REF: String = "Category"
+    const val TOKEN_REF = "Tokens"
+
+
     val IMAGE_URL: String="IMAGE_URL"
     val IS_SEND_IMAGE: String="IS_SEND_IMAGE"
 
     var currentShippingOrder: ShippingOrderModel?=null
-    val SHIPPING_ORDER_REF: String="ShippingOrder" //same as server app
-    val REFUND_REQUEST_REF: String="RefundRequest"
+
     const val NOTI_TITLE = "title"
     const val NOTI_CONTENT = "content"
     var authorizeToken: String?=null
     var currenToken: String = ""
-    const val ORDER_REF: String = "Order"
-    const val COMMENT_REF: String = "Comment"
+
     var foodSelected: FoodModel?=null
     var categorySelected: CategoryModel?=null
-    const val CATEGORY_REF: String = "Category"
+
     val FULL_WIDTH_COLUMN: Int=1
     val DEFAULT_COLUMN_COUNT: Int=0
-    const val BEST_DEAL_REF: String="BestDeals"
-    const val POPULAR_REF: String="MostPopular"
-    val USER_REFERENCE="Users"
+
     var currentUser:UserModel?=null
 
-    val TOKEN_REF = "Tokens"
+
 }

@@ -269,7 +269,9 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback, ISearchCategoryC
                             override fun onClick(pos: Int) {
                                val cartItem = adapter!!.getItemAtPosition(pos)
                                 FirebaseDatabase.getInstance()
-                                        .getReference(Common.CATEGORY_REF)
+                                        .getReference(Common.RESTAURANT_REF)
+                                        .child(Common.currentRestaurant!!.uid!!)
+                                        .child(Common.CATEGORY_REF)
                                         .child(cartItem.categoryId)
                                         .addListenerForSingleValueEvent(object:ValueEventListener{
                                             override fun onCancelled(p0: DatabaseError) {

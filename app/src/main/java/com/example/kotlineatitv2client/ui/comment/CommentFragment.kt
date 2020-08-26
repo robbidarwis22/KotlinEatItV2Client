@@ -59,7 +59,9 @@ class CommentFragment : BottomSheetDialogFragment(), ICommentCallBack {
         dialog!!.show()
 
         val commentModels = ArrayList<CommentModel>()
-        FirebaseDatabase.getInstance().getReference(Common.COMMENT_REF)
+        FirebaseDatabase.getInstance().getReference(Common.RESTAURANT_REF)
+            .child(Common.currentRestaurant!!.uid!!)
+            .child(Common.COMMENT_REF)
             .child(Common.foodSelected!!.id!!)
             .orderByChild("commentTimeStamp")
             .limitToLast(100)
