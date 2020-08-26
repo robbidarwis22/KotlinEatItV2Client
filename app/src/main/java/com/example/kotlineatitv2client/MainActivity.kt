@@ -96,7 +96,7 @@ class MainActivity : AppCompatActivity() {
         userRef = FirebaseDatabase.getInstance().getReference(Common.USER_REFERENCE)
         firebaseAuth = FirebaseAuth.getInstance()
         dialog = SpotsDialog.Builder().setContext(this).setCancelable(false).build()
-        cloudFunctions = RetrofitCloudClient.getInstance().create(ICloudFunctions::class.java)
+
         listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
 
             Dexter.withActivity(this@MainActivity)
@@ -171,22 +171,12 @@ class MainActivity : AppCompatActivity() {
 //                        }
 //                        .addOnCompleteListener{
 //                            Common.authorizeToken = it.result!!.token
-//    val headers = HashMap<String,String>()
-//    headers.put("Authorization",Common.buildToken(Common.authorizeToken!!))
 //
-//                                    compositeDisposable.add(cloudFunctions!!.getToken(headers)
-//                        .subscribeOn(Schedulers.io())
-//                        .observeOn(AndroidSchedulers.mainThread())
-//                        .subscribe({ braintreeToken ->
 //
 //                            dialog!!.dismiss()
 //                            val userModel = p0.getValue(UserModel::class.java)
-//                            goToHomeActivity(userModel,braintreeToken.token)
+//                            goToHomeActivity(userModel)
 //
-//                        },{ throwable ->
-//                            dialog!!.dismiss()
-//                            Toast.makeText(this@MainActivity,""+throwable.message,Toast.LENGTH_SHORT).show()
-//                        }));
 //                        }
 //                } else
 //                {
@@ -328,22 +318,11 @@ class MainActivity : AppCompatActivity() {
 //                        }
 //                        .addOnCompleteListener {
 //                            Common.authorizeToken = it!!.result!!.token
-//    val headers = HashMap<String,String>()
-//    headers.put("Authorization",Common.buildToken(Common.authorizeToken!!))
-//                            compositeDisposable.add(cloudFunctions.getToken(headers)
-//                        .subscribeOn(Schedulers.io())
-//                        .observeOn(AndroidSchedulers.mainThread())
-//                        .subscribe({ braintreeToken ->
+//
 //                            dialogInterface.dismiss()
 //                            Toast.makeText(this@MainActivity, "Congratulation! Register Successfully", Toast.LENGTH_SHORT).show()
-////                            goToHomeActivity(userModel,braintreeToken.token)
-//                            goToHomeActivity(userModel)
-//                        },{t: Throwable? ->
+////                            goToHomeActivity(userModel)
 //
-//                            dialogInterface.dismiss()
-//                            Toast.makeText(this@MainActivity, ""+t!!.message, Toast.LENGTH_SHORT).show()
-//
-//                        }))
 //                        }
 //                }
 //            }
@@ -371,8 +350,8 @@ class MainActivity : AppCompatActivity() {
                 {
 
                     Common.currentUser = userModel!!
-                    Common.updateToken(this@MainActivity,task.result!!.token)
                     //this function must be call after Common is assigned
+                    Common.updateToken(this@MainActivity,task.result!!.token)
 
                     startActivity(Intent(this@MainActivity,HomeActivity::class.java))
                     finish()
@@ -389,9 +368,9 @@ class MainActivity : AppCompatActivity() {
     }
 
 //    BRAINTREE
-//    private fun goToHomeActivity(userModel: UserModel?,token:String?) {
+//    private fun goToHomeActivity(userModel: UserModel?) {
 //        Common.currentUser = userModel!!
-//        Common.currenToken = token!!
+
 //        startActivity(Intent(this@MainActivity,HomeActivity::class.java))
 //        finish()
 //    }

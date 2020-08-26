@@ -33,6 +33,8 @@ import com.example.kotlineatitv2client.Model.CategoryModel
 import com.example.kotlineatitv2client.Model.FoodModel
 import com.example.kotlineatitv2client.Model.PopularCategoryModel
 import com.example.kotlineatitv2client.Model.UserModel
+import com.example.kotlineatitv2client.Remote.ICloudFunctions
+import com.example.kotlineatitv2client.Remote.RetrofitCloudClient
 import com.google.android.gms.common.api.Status
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
@@ -49,6 +51,7 @@ import dmax.dialog.SpotsDialog
 import io.paperdb.Paper
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.internal.operators.single.SingleObserveOn
 import io.reactivex.schedulers.Schedulers
@@ -76,7 +79,10 @@ class HomeActivity : AppCompatActivity() {
         Place.Field.NAME,
         Place.Field.ADDRESS,
         Place.Field.LAT_LNG)
-    
+
+    private var cloudsFunction: ICloudFunctions?=null
+    private val compositeDisaple = CompositeDisposable()
+
     private var menuItemClick = -1
 
     override fun onResume() {
@@ -349,6 +355,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onStop() {
         EventBus.getDefault().unregister(this)
+        compositeDisaple.clear()
         super.onStop()
     }
 
@@ -544,6 +551,25 @@ class HomeActivity : AppCompatActivity() {
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     public fun onRestaurantClick(event:MenuItemEvent)
     {
+
+        cloudsFunction = RetrofitCloudClient.getInstance(event.restaurantModel!!.paymentUrl).create(ICloudFunctions::class.java)
+
+//      val headers = HashMap<String,String>()
+//      headers.put("Authorization",Common.buildToken(Common.authorizeToken!!))
+
+//      compositeDisaple.add(cloudsFunction!!.getToken(headers)
+//                        .subscribeOn(Schedulers.io())
+//                        .observeOn(AndroidSchedulers.mainThread())
+//                        .subscribe({ braintreeToken ->
+//
+//                            dialog!!.dismiss()
+//                            Common.currentToken = braintreeToken.token
+//
+//                        },{ throwable ->
+//                            dialog!!.dismiss()
+//                            Toast.makeText(this@HomeActivity,""+throwable.message,Toast.LENGTH_SHORT).show()
+//                        }));
+
         val bundle = Bundle()
         bundle.putString("restaurant",event.restaurantModel.uid)
         navController.navigate(R.id.nav_home,bundle)

@@ -198,7 +198,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback, ISearchCategoryC
 
         setHasOptionsMenu(true) //Important, if not add it,menu will never be inflate
 
-//        cloudFunctions = RetrofitCloudClient.getInstance().create(ICloudFunctions::class.java)
+//        cloudFunctions = RetrofitCloudClient.getInstance(Common.currentRestaurant!!.uid).create(ICloudFunctions::class.java)
         ifcmService = RetrofitFCMClient.getInstance().create(IFCMService::class.java)
 
         listener = this
@@ -509,7 +509,9 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback, ISearchCategoryC
 
     private fun writeOrderToFirebase(order: OrderModel) {
         FirebaseDatabase.getInstance()
-            .getReference(Common.ORDER_REF)
+            .getReference(Common.RESTAURANT_REF)
+            .child(Common.currentRestaurant!!.uid)
+            .child(Common.ORDER_REF)
             .child(Common.createOrderNumber())
             .setValue(order)
             .addOnFailureListener{ e -> Toast.makeText(context!!,""+e.message,Toast.LENGTH_SHORT).show() }
