@@ -248,6 +248,15 @@ object Common {
         }else null
     }
 
+    fun getNewsTopic(): String {
+        //restore something like: restaurantid_news
+        return StringBuilder("/topics/")
+            .append(Common.currentRestaurant!!.uid)
+            .append("_")
+            .append("news")
+            .toString()
+    }
+
     fun getListAddon(addonModels: List<AddonModel>): String {
         val result = StringBuilder()
         for (addonModel in addonModels)
@@ -262,8 +271,7 @@ object Common {
     val RESTAURANT_REF: String = "Restaurant"
     val IMAGE_URL: String="IMAGE_URL"
     val IS_SEND_IMAGE: String="IS_SEND_IMAGE"
-    val NEWS_TOPIC: String="news"
-    val IS_SUBSCRIBE_NEWS: String = "IS_SUBSCRIBE_NEWS"
+
     var currentShippingOrder: ShippingOrderModel?=null
     val SHIPPING_ORDER_REF: String="ShippingOrder" //same as server app
     val REFUND_REQUEST_REF: String="RefundRequest"
