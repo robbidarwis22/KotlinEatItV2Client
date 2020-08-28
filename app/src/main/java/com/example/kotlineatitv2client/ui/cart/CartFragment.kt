@@ -408,6 +408,14 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback, ISearchCategoryC
                         })
 
             val dialog = builder.create()
+            dialog.setOnDismissListener { 
+                //Fix Crash
+                if (places_fragment != null)
+                    activity!!.supportFragmentManager!!
+                        .beginTransaction()
+                        .remove(places_fragment!!)
+                        .commit()
+            }
             dialog.show()
         }
 
@@ -539,8 +547,10 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback, ISearchCategoryC
                                         .observeOn(AndroidSchedulers.mainThread())
                                         .subscribe({t: FCMResponse? ->
                                             if (t!!.success != 0)
+                                            {
                                                 Toast.makeText(context!!,"Order placed successfully",Toast.LENGTH_SHORT).show()
-
+                                                EventBus.getDefault().postSticky(CountCartEvent(true));
+                                            }
                                         },{t: Throwable? ->
 
                                             Toast.makeText(context!!,"Order was sent but notification failed",Toast.LENGTH_SHORT).show()
@@ -615,6 +625,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback, ISearchCategoryC
         cartViewModel!!.onStop()
         compositeDisposable!!.clear()
         EventBus.getDefault().postSticky(HideFABCart(false))
+        EventBus.getDefault().postSticky(CountCartEvent(true))
         if (EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().unregister(this)
         if (fusedLocationProviderClient != null)

@@ -19,6 +19,7 @@ import butterknife.Unbinder
 import com.asksira.loopingviewpager.LoopingViewPager
 import com.example.kotlineatitv2client.Adapter.MyBestDealsAdapter
 import com.example.kotlineatitv2client.Adapter.MyPopularCategoriesAdapter
+import com.example.kotlineatitv2client.EventBus.CountCartEvent
 import com.example.kotlineatitv2client.EventBus.MenuItemBack
 import com.example.kotlineatitv2client.R
 import kotlinx.android.synthetic.main.fragment_home.*
@@ -33,6 +34,8 @@ class HomeFragment : Fragment() {
     var viewPager: LoopingViewPager?=null
 
     var layoutAnimationController:LayoutAnimationController?=null
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -71,6 +74,7 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         viewPager!!.resumeAutoScroll()
+        EventBus.getDefault().postSticky(CountCartEvent(true))
     }
 
     override fun onPause() {
