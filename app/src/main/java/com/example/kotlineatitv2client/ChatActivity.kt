@@ -41,7 +41,6 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.random.Random
 
 class ChatActivity : AppCompatActivity(), ILoadTimeFromFirebaseCallback { //error
     private val MY_CAMERA_REQUEST_CODE = 7171 //any number you want
@@ -217,7 +216,8 @@ class ChatActivity : AppCompatActivity(), ILoadTimeFromFirebaseCallback { //erro
     }
 
     private fun getOutputMediaFile(): File? {
-        val mediaStorageDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"EatItV2")
+        val mediaStorageDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+            "EatItV2")
         if (!mediaStorageDir.exists())
         {
             if (!mediaStorageDir.mkdir()) return null
@@ -228,8 +228,7 @@ class ChatActivity : AppCompatActivity(), ILoadTimeFromFirebaseCallback { //erro
             .append("IMG_")
             .append(time_stamp)
             .append("_")
-            .append(Random.nextInt()).toString())
-//            .append(java.util.Random().nextInt()).toString())
+            .append(Random().nextInt()).toString())
     }
 
     private fun submitChatToFirebase(chatMessageModel: ChatMessageModel, isPicture: Boolean) {

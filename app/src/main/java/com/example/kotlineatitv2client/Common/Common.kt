@@ -27,7 +27,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.database.FirebaseDatabase
 import java.math.RoundingMode
 import java.text.DecimalFormat
-import kotlin.random.Random
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.text.StringBuilder
 
 object Common {
@@ -80,7 +81,7 @@ object Common {
     fun createOrderNumber(): String {
         return StringBuilder()
                 .append(System.currentTimeMillis())
-                .append(Math.abs(Random.nextInt()))
+                .append(Math.abs(Random().nextInt()))
                 .toString()
     }
 
@@ -281,8 +282,7 @@ object Common {
         else if(a.compareTo(b!!) < 0)
             return StringBuilder(b!!).append(a).toString()
         else
-           return StringBuilder("ChatYourself_Error_").append(Random.nextInt()).toString()
-//        return StringBuilder("ChatYourself_Error_").append(java.util.Random().nextInt()).toString()
+           return StringBuilder("ChatYourself_Error_").append(Random().nextInt()).toString()
     }
 
     fun getFileName(contentResolver: ContentResolver?, fileUri: Uri): Any {
