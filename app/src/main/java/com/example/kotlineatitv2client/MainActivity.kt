@@ -15,9 +15,9 @@ import android.widget.TextView
 import com.example.kotlineatitv2client.Common.Common
 import com.example.kotlineatitv2client.Model.UserModel
 import com.example.kotlineatitv2client.Remote.ICloudFunctions
-import com.example.kotlineatitv2client.Remote.RetrofitCloudClient
+//import com.example.kotlineatitv2client.Remote.RetrofitCloudClient
 import com.firebase.ui.auth.AuthUI
-import com.firebase.ui.auth.IdpResponse
+//import com.firebase.ui.auth.IdpResponse
 import com.google.android.gms.common.api.Status
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
@@ -30,16 +30,22 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
 import com.google.firebase.iid.FirebaseInstanceId
 import com.karumi.dexter.Dexter
+import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
-import com.karumi.dexter.listener.PermissionDeniedResponse
-import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
-import com.karumi.dexter.listener.single.PermissionListener
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+//import com.karumi.dexter.Dexter
+//import com.karumi.dexter.DexterBuilder
+//import com.karumi.dexter.PermissionToken
+//import com.karumi.dexter.listener.PermissionDeniedResponse
+//import com.karumi.dexter.listener.PermissionGrantedResponse
+//import com.karumi.dexter.listener.PermissionRequest
+//import com.karumi.dexter.listener.single.PermissionListener
 import dmax.dialog.SpotsDialog
-import io.reactivex.Scheduler
-import io.reactivex.android.schedulers.AndroidSchedulers
+//import io.reactivex.Scheduler
+//import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
+//import io.reactivex.schedulers.Schedulers
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -100,29 +106,35 @@ class MainActivity : AppCompatActivity() {
         listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
 
             Dexter.withActivity(this@MainActivity)
-                .withPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
-                .withListener(object:PermissionListener{
-                    override fun onPermissionGranted(response: PermissionGrantedResponse?) {
-                        val user = firebaseAuth.currentUser
-                        if(user != null)
+                .withPermissions(Arrays.asList(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    android.Manifest.permission.CAMERA
+                ))
+                .withListener(object:MultiplePermissionsListener{
+                    override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
+                        if (report!!.areAllPermissionsGranted())
                         {
-                            checkUserFromFirebase(user!!)
+                            val user = firebaseAuth.currentUser
+                            if(user != null)
+                            {
+                                checkUserFromFirebase(user!!)
+                            }
+                            else
+                            {
+                                phoneLogin()
+                            }
                         }
                         else
-                        {
-                            phoneLogin()
-                        }
+                            Toast.makeText(this@MainActivity,"Please accept all permissions",Toast.LENGTH_SHORT).show()
                     }
 
                     override fun onPermissionRationaleShouldBeShown(
-                        permission: PermissionRequest?,
+                        permissions: MutableList<PermissionRequest>?,
                         token: PermissionToken?
                     ) {
 
-                    }
-
-                    override fun onPermissionDenied(response: PermissionDeniedResponse?) {
-                        Toast.makeText(this@MainActivity,"You must accept this permission to use app",Toast.LENGTH_SHORT).show()
                     }
 
                 }).check()

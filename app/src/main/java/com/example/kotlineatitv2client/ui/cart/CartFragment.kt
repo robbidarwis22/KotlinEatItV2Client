@@ -724,6 +724,10 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback, ISearchCategoryC
         writeOrderToFirebase(order)
     }
 
+    override fun onLoadOnlyTimeSuccess(estimatedTimeMs: Long) {
+        //Do nothing
+    }
+
     override fun onLoadTimeFailed(message: String) {
         Toast.makeText(context!!,message,Toast.LENGTH_SHORT).show()
     }

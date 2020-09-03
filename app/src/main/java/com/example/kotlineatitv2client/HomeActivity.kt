@@ -105,6 +105,11 @@ class HomeActivity : AppCompatActivity() {
         fab.setOnClickListener { view ->
             navController.navigate(R.id.nav_cart)
         }
+        
+        fab_chat.setOnClickListener {
+            startActivity(Intent(this,ChatActivity::class.java))
+        }
+
         drawer = findViewById(R.id.drawer_layout)
         navView = findViewById(R.id.nav_view)
         navController = findNavController(R.id.nav_host_fragment)
@@ -385,9 +390,14 @@ class HomeActivity : AppCompatActivity() {
         if (event.isHide)
         {
             fab.hide()
+            fab_chat.hide()
         }
         else
+        {
             fab.show()
+            fab_chat.show()
+        }
+
     }
 
     @Subscribe(sticky = true,threadMode = ThreadMode.MAIN)

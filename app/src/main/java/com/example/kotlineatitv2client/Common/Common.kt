@@ -3,13 +3,16 @@ package com.example.kotlineatitv2client.Common
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Build
+import android.provider.OpenableColumns
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -272,6 +275,39 @@ object Common {
             return "Default"
     }
 
+    fun generateChatRoomId(a: String, b: String?): String {
+        if (a.compareTo(b!!) > 0)
+            return StringBuilder(a).append(b).toString()
+        else if(a.compareTo(b!!) < 0)
+            return StringBuilder(b!!).append(a).toString()
+        else
+           return StringBuilder("ChatYourself_Error_").append(Random.nextInt()).toString()
+//        return StringBuilder("ChatYourself_Error_").append(java.util.Random().nextInt()).toString()
+    }
+
+    fun getFileName(contentResolver: ContentResolver?, fileUri: Uri): Any {
+        var result:String?=null
+        if (fileUri.scheme == "content")
+        {
+            val cursor = contentResolver!!.query(fileUri,null,null,null,null)
+            try {
+                if (cursor != null && cursor.moveToFirst())
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+            }finally {
+                cursor!!.close()
+            }
+        }
+        if (result == null)
+        {
+            result = fileUri.path
+            val cut = result!!.lastIndexOf('/')
+            if (cut != -1) result = result.substring(cut+1)
+        }
+        return result
+    }
+
+
+    val CHAT_REF: String="Chat"
     var currentRestaurant: RestaurantModel?=null
     const val RESTAURANT_REF: String = "Restaurant"
     const val SHIPPING_ORDER_REF: String="ShippingOrder" //same as server app
