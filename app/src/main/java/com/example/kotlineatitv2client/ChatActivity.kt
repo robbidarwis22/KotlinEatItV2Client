@@ -24,6 +24,7 @@ import com.bumptech.glide.Glide
 import com.example.kotlineatitv2client.Callback.ILoadTimeFromFirebaseCallback
 import com.example.kotlineatitv2client.Common.Common
 import com.example.kotlineatitv2client.EventBus.HideFABCart
+import com.example.kotlineatitv2client.Model.ChatInfoModel
 import com.example.kotlineatitv2client.Model.ChatMessageModel
 import com.example.kotlineatitv2client.Model.OrderModel
 import com.example.kotlineatitv2client.ViewHolder.ChatPictureViewHolder
@@ -41,6 +42,7 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.HashMap
 
 class ChatActivity : AppCompatActivity(), ILoadTimeFromFirebaseCallback { //error
     private val MY_CAMERA_REQUEST_CODE = 7171 //any number you want
@@ -166,7 +168,8 @@ class ChatActivity : AppCompatActivity(), ILoadTimeFromFirebaseCallback { //erro
         val query = chatRef!!.child(Common.generateChatRoomId(
             Common.currentRestaurant!!.uid,
             Common.currentUser!!.uid
-        ))
+        )).child(Common.CHAT_DETAIL_REF)
+
         options = FirebaseRecyclerOptions.Builder<ChatMessageModel>()
             .setQuery(query,ChatMessageModel::class.java)
             .build()
@@ -231,33 +234,123 @@ class ChatActivity : AppCompatActivity(), ILoadTimeFromFirebaseCallback { //erro
             .append(Random().nextInt()).toString())
     }
 
-    private fun submitChatToFirebase(chatMessageModel: ChatMessageModel, isPicture: Boolean) {
+    private fun submitChatToFirebase(chatMessageModel: ChatMessageModel, isPicture: Boolean,estimateTimeInMs: Long) {
         chatRef!!.child(Common.generateChatRoomId(Common.currentRestaurant!!.uid,
         Common.currentUser!!.uid))
-            .push()
-            .setValue(chatMessageModel)
-            .addOnFailureListener { e:Exception ->
-                Toast.makeText(this@ChatActivity,e.message,Toast.LENGTH_SHORT).show()
-            }
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful)
-                {
-                    edt_chat.setText("")
-                    edt_chat.requestFocus()
-                    if (adapter != null)
+            .addListenerForSingleValueEvent(object:ValueEventListener{
+                override fun onDataChange(p0: DataSnapshot) {
+                    if (p0.exists())
                     {
-                        adapter.notifyDataSetChanged()
-                        if (isPicture)
-                        {
-                            fileUri = null
-                            img_preview.visibility = View.GONE
-                        }
+                        appendChat(chatMessageModel,isPicture,estimateTimeInMs)
                     }
+                    else{
+                        createChat(chatMessageModel,isPicture,estimateTimeInMs)
+                    }
+                }
+
+                override fun onCancelled(p0: DatabaseError) {
+                    Toast.makeText(this@ChatActivity,p0.message,Toast.LENGTH_SHORT).show()
+                }
+
+            })
+    }
+
+    private fun appendChat(
+        chatMessageModel: ChatMessageModel,
+        picture: Boolean,
+        estimateTimeInMs: Long
+    ) {
+        val update_data = HashMap<String,Any>()
+        update_data["lastUpdate"] = estimateTimeInMs
+        if (picture)
+            update_data["lastMessage"] = "<Image>"
+        else
+            update_data["lastMessage"] = chatMessageModel.content!!
+        chatRef!!.child(Common.generateChatRoomId(Common.currentRestaurant!!.uid!!,
+        Common.currentUser!!.uid!!))
+            .updateChildren(update_data)
+            .addOnFailureListener { e-> Toast.makeText(this@ChatActivity,e.message,Toast.LENGTH_SHORT).show() }
+            .addOnCompleteListener { task2 ->
+                if (task2.isSuccessful)
+                {
+                    chatRef!!.child(Common.generateChatRoomId(Common.currentRestaurant!!.uid,
+                        Common.currentUser!!.uid))
+                        .child(Common.CHAT_DETAIL_REF) //add above push()
+                        .push()
+                        .setValue(chatMessageModel)
+                        .addOnFailureListener { e:Exception ->
+                            Toast.makeText(this@ChatActivity,e.message,Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful)
+                            {
+                                edt_chat.setText("")
+                                edt_chat.requestFocus()
+                                if (adapter != null)
+                                {
+                                    adapter.notifyDataSetChanged()
+                                    if (picture)
+                                    {
+                                        fileUri = null
+                                        img_preview.visibility = View.GONE
+                                    }
+                                }
+                            }
+                        }
                 }
             }
     }
 
-    private fun uploadPicture(fileUri: Uri, chatMessageModel: ChatMessageModel) {
+    private fun createChat(
+        chatMessageModel: ChatMessageModel,
+        picture: Boolean,
+        estimateTimeInMs: Long
+    ) {
+        val chatInfoModel = ChatInfoModel()
+        chatInfoModel.createName = chatMessageModel.name
+        if (picture)
+            chatInfoModel.lastMessage = "<Image>"
+        else
+            chatInfoModel.lastMessage = chatMessageModel.content
+        chatInfoModel.lastUpdate = estimateTimeInMs
+        chatInfoModel.createDate = estimateTimeInMs
+
+        chatRef!!.child(Common.generateChatRoomId(Common.currentRestaurant!!.uid!!,
+        Common.currentUser!!.uid!!))
+            .setValue(chatInfoModel)
+            .addOnFailureListener { e-> Toast.makeText(this@ChatActivity,e.message,Toast.LENGTH_SHORT).show() }
+            .addOnCompleteListener { task2 ->
+                if (task2.isSuccessful)
+                {
+                    chatRef!!.child(Common.generateChatRoomId(Common.currentRestaurant!!.uid,
+                        Common.currentUser!!.uid))
+                        .child(Common.CHAT_DETAIL_REF) //add above push()
+                        .push()
+                        .setValue(chatMessageModel)
+                        .addOnFailureListener { e:Exception ->
+                            Toast.makeText(this@ChatActivity,e.message,Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful)
+                            {
+                                edt_chat.setText("")
+                                edt_chat.requestFocus()
+                                if (adapter != null)
+                                {
+                                    adapter.notifyDataSetChanged()
+                                    if (picture)
+                                    {
+                                        fileUri = null
+                                        img_preview.visibility = View.GONE
+                                    }
+                                }
+                            }
+                        }
+                }
+            }
+    }
+
+    private fun uploadPicture(fileUri: Uri, chatMessageModel: ChatMessageModel,estimateTimeInMs:Long) {
         if (fileUri != null)
         {
             val dialog = AlertDialog.Builder(this@ChatActivity)
@@ -288,7 +381,7 @@ class ChatActivity : AppCompatActivity(), ILoadTimeFromFirebaseCallback { //erro
                     chatMessageModel.isPicture = true
                     chatMessageModel.pictureLink = url
 
-                    submitChatToFirebase(chatMessageModel,chatMessageModel.isPicture)
+                    submitChatToFirebase(chatMessageModel,chatMessageModel.isPicture,estimateTimeInMs)
                 }
             }
         }
@@ -311,11 +404,11 @@ class ChatActivity : AppCompatActivity(), ILoadTimeFromFirebaseCallback { //erro
         if (fileUri == null)
         {
             chatMessageModel.isPicture = false
-            submitChatToFirebase(chatMessageModel,chatMessageModel.isPicture)
+            submitChatToFirebase(chatMessageModel,chatMessageModel.isPicture,estimatedTimeMs)
         }
         else
         {
-            uploadPicture(fileUri!!,chatMessageModel)
+            uploadPicture(fileUri!!,chatMessageModel,estimatedTimeMs)
         }
     }
 

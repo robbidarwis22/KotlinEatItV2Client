@@ -307,6 +307,7 @@ object Common {
     }
 
 
+    val CHAT_DETAIL_REF: String="ChatDetail"
     val CHAT_REF: String="Chat"
     var currentRestaurant: RestaurantModel?=null
     const val RESTAURANT_REF: String = "Restaurant"
