@@ -626,6 +626,7 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback, ISearchCategoryC
         compositeDisposable!!.clear()
         EventBus.getDefault().postSticky(HideFABCart(false))
         EventBus.getDefault().postSticky(CountCartEvent(true))
+        EventBus.getDefault().removeAllStickyEvents()
         if (EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().unregister(this)
         if (fusedLocationProviderClient != null)
